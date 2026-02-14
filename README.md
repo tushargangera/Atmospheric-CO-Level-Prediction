@@ -97,59 +97,24 @@ A Streamlit web application (`app.py`) was created to provide an interactive int
 *   Makes a prediction using the best model.
 *   Displays the predicted CO level as 'Low', 'Moderate', or 'High'.
 
-### How to Run the Streamlit App:
 
-1.  **Ensure `app.py`, `best_model.pkl`, and `scaler.pkl` are in the same directory.**
-2.  **Install Streamlit:**
-    ```bash
-    pip install streamlit
-    ```
-3.  **Run the application from your terminal:**
-    ```bash
-    streamlit run app.py
-    ```
-    If running in a cloud environment (like Google Colab) and you need a public URL:
-    ```bash
-    streamlit run app.py & npx localtunnel --port 8501
-    ```
-    (You might be prompted to enter a 'Tunnel Password' for `localtunnel`.)
+## How to Run Locally
 
-Streamlit App Like: https://atmospheric-co-level-prediction.streamlit.app/
-
-## 8. Environment Setup
-
-To replicate this project, it is recommended to set up a virtual environment and install the required packages. The `requirements.txt` file lists all the necessary Python libraries and their versions.
-
-### Steps:
-
-1.  **Clone the repository** (if applicable).
-2.  **Create a virtual environment:**
-    ```bash
-    python -m venv venv
-    ```
-3.  **Activate the virtual environment:**
-    *   On Windows:
-        ```bash
-        .\venv\Scripts\activate
-        ```
-    *   On macOS/Linux:
-        ```bash
-        source venv/bin/activate
-        ```
-4.  **Install the dependencies:**
+1.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
+2.  **Run Streamlit App:**
+    ```bash
+    streamlit run app.py
+    ```
 
-### `requirements.txt` content:
+## How to Deploy on Streamlit Cloud
 
-```
-pandas==2.2.2
-numpy==2.0.2
-scikit-learn==1.6.1
-matplotlib==3.10.0
-seaborn==0.13.2
-joblib==1.5.3
-xgboost==3.2.0
-tabulate==0.9.0
-```
+1.  Push this repository to GitHub.
+2.  Log in to [Streamlit Community Cloud](https://streamlit.io/cloud).
+3.  Click "New app" and select this repository.
+4.  Set the **Main file path** to `app.py`.
+5.  Click **Deploy**.
+
+Streamlit App Link: https://atmospheric-co-level-prediction.streamlit.app/
