@@ -4,7 +4,7 @@
 This project aims to develop and evaluate several machine learning classification models to predict the Carbon Monoxide (CO) level in the atmosphere. The CO level is categorized into 'low', 'medium', and 'high' based on quantiles of the CO(GT) concentration from the Air Quality dataset. The ultimate goal is to build an interactive Streamlit web application to demonstrate these models and their performance.
 
 ## b. Dataset Description
-The dataset used is the "Air Quality (UCI)" dataset, sourced from the UCI Machine Learning Repository. It contains measurements of various air pollutants and meteorological parameters recorded hourly from March 2004 to February 2005 in an Italian city. Key features include:
+The dataset used is the "Air Quality (UCI)" dataset, sourced from the [Air Quality](https://archive.ics.uci.edu/dataset/360/air+quality). It contains measurements of various air pollutants and meteorological parameters recorded hourly from March 2004 to February 2005 in an Italian city. Key features include:
 
 *   `CO(GT)`: True hourly averaged CO concentration (mg/m^3)
 *   `PT08.S1(CO)`: Tin oxide sensor response (CO)
