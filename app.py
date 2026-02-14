@@ -1,106 +1,180 @@
 import streamlit as st
+import joblib
 import pandas as pd
 import numpy as np
-import joblib
+import os
 
-# Load the best model and scaler
-best_model = joblib.load('best_model.pkl')
-scaler = joblib.load('scaler.pkl')
+# Define the directory where models are saved
+models_dir = 'model'
 
-# Streamlit app title and description
+# Ensure the models directory exists (if running locally without prior execution)
+if not os.path.exists(models_dir):
+    st.error(f"Model directory '{models_dir}' not found. Please ensure models are saved in the correct location.")
+    st.stop()
+
+# Load the scaler and the best model
+try:
+    scaler = joblib.load(os.path.join(models_dir, 'scaler.pkl'))
+    best_model = joblib.load('best_model.pkl')
+    # The original labels were 'Low', 'Moderate', 'High' mapped to 0, 1, 2 respectively.
+    # Reconstruct the inverse label mapping directly.
+    label_mapping_inv = {0: 'Low', 1: 'Moderate', 2: 'High'}
+
+except FileNotFoundError as e:
+    st.error(f"Error loading model or scaler: {e}. Make sure 'scaler.pkl' and 'best_model.pkl' are in the root directory and 'y_test_encoded.pkl' in the 'model' directory.")
+    st.stop()
+
+# Define feature names (order matters for prediction)
+feature_names = [
+    'PT08.S1(CO)', 'C6H6(GT)', 'PT08.S2(NMHC)', 'NOx(GT)', 'PT08.S3(NOx)',
+    'NO2(GT)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH',
+    'hour', 'day_of_week', 'day_of_year', 'month'
+]
+
+# Streamlit App Title
 st.title('Atmospheric CO Level Prediction')
-st.write('Enter the atmospheric parameters to predict the Carbon Monoxide (CO) level (Low, Moderate, or High).')
+st.markdown('Predict the Carbon Monoxide (CO) level based on various atmospheric parameters.')
 
-# Input features from the user
-st.header('Input Atmospheric Parameters')
+# Input fields for features
+st.sidebar.header('Input Parameters')
 
-# Define min/max/default for each feature based on your dataset's scaled values
-# (These are approximate ranges, you might want to fine-tune based on X_train.describe() or specific domain knowledge)
+user_input = {}
+for feature in feature_names:
+    # Provide appropriate default values and ranges for input fields
+    # These are illustrative defaults; actual ranges might need to be derived from your dataset's min/max
+    if feature == 'hour':
+        user_input[feature] = st.sidebar.slider(f'Hour ({feature})', 0, 23, 12)
+    elif feature == 'day_of_week':
+        user_input[feature] = st.sidebar.slider(f'Day of Week ({feature}) (0=Mon, 6=Sun)', 0, 6, 2)
+    elif feature == 'month':
+        user_input[feature] = st.sidebar.slider(f'Month ({feature})', 1, 12, 6)
+    elif feature == 'day_of_year':
+        user_input[feature] = st.sidebar.slider(f'Day of Year ({feature})', 1, 366, 180)
+    elif feature == 'T':
+        user_input[feature] = st.sidebar.number_input(f'Temperature (°C) ({feature})', value=15.0, min_value=-50.0, max_value=50.0)
+    elif feature == 'RH':
+        user_input[feature] = st.sidebar.number_input(f'Relative Humidity (%) ({feature})', value=50.0, min_value=0.0, max_value=100.0)
+    elif feature == 'AH':
+        user_input[feature] = st.sidebar.number_input(f'Absolute Humidity ({feature})', value=1.0, min_value=0.0, max_value=10.0)
+    elif feature == 'C6H6(GT)':
+         user_input[feature] = st.sidebar.number_input(f'Benzene Concentration (microg/m^3) ({feature})', value=8.0, min_value=0.0, max_value=100.0)
+    else:
+        # Generic number input for other sensor readings and concentrations
+        user_input[feature] = st.sidebar.number_input(f'{feature}', value=1000.0, min_value=0.0, max_value=3000.0)
 
-# Input for numerical features
-PT08S1_CO = st.slider('PT08.S1 (CO) Sensor Response', float(scaler.data_min_[0]), float(scaler.data_max_[0]), float(scaler.mean_[0]))
-C6H6_GT = st.slider('Benzene (C6H6(GT))', float(scaler.data_min_[1]), float(scaler.data_max_[1]), float(scaler.mean_[1]))
-PT08S2_NMHC = st.slider('PT08.S2 (NMHC) Sensor Response', float(scaler.data_min_[2]), float(scaler.data_max_[2]), float(scaler.mean_[2]))
-NOx_GT = st.slider('NOx (NOx(GT))', float(scaler.data_min_[3]), float(scaler.data_max_[3]), float(scaler.mean_[3]))
-PT08S3_NOx = st.slider('PT08.S3 (NOx) Sensor Response', float(scaler.data_min_[4]), float(scaler.data_max_[4]), float(scaler.mean_[4]))
-NO2_GT = st.slider('NO2 (NO2(GT))', float(scaler.data_min_[5]), float(scaler.data_max_[5]), float(scaler.mean_[5]))
-PT08S4_NO2 = st.slider('PT08.S4 (NO2) Sensor Response', float(scaler.data_min_[6]), float(scaler.data_max_[6]), float(scaler.mean_[6]))
-PT08S5_O3 = st.slider('PT08.S5 (O3) Sensor Response', float(scaler.data_min_[7]), float(scaler.data_max_[7]), float(scaler.mean_[7]))
-T = st.slider('Temperature (T)', float(scaler.data_min_[8]), float(scaler.data_max_[8]), float(scaler.mean_[8]))
-RH = st.slider('Relative Humidity (RH)', float(scaler.data_min_[9]), float(scaler.data_max_[9]), float(scaler.mean_[9]))
-AH = st.slider('Absolute Humidity (AH)', float(scaler.data_min_[10]), float(scaler.data_max_[10]), float(scaler.mean_[10]))
-hour = st.slider('Hour of Day', 0, 23, 12)
-day_of_week = st.slider('Day of Week (0=Monday, 6=Sunday)', 0, 6, 2)
-day_of_year = st.slider('Day of Year', 1, 365, 182)
-month = st.slider('Month', 1, 12, 6)
+# Convert user input to DataFrame
+input_df = pd.DataFrame([user_input])
 
-# Create a DataFrame from user inputs
-input_data = pd.DataFrame([[PT08S1_CO, C6H6_GT, PT08S2_NMHC, NOx_GT, PT08S3_NOx,
-                            NO2_GT, PT08S4_NO2, PT08S5_O3, T, RH, AH,
-                            hour, day_of_week, day_of_year, month]],
-                            columns=['PT08.S1(CO)', 'C6H6(GT)', 'PT08.S2(NMHC)', 'NOx(GT)', 'PT08.S3(NOx)',
-                                     'NO2(GT)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH',
-                                     'hour', 'day_of_week', 'day_of_year', 'month'])
+# Scale the input features
+scaled_input = scaler.transform(input_df)
+scaled_input_df = pd.DataFrame(scaled_input, columns=feature_names)
 
-# Scale the input data
-# Note: The scaler was fit on X_train which included 'CO(GT)' and 'air_quality_category' originally. 
-# However, the input_data for prediction should only contain the features. 
-# Ensure the columns in input_data match the columns X_train_scaled was trained on.
-
-# For simplicity, let's assume the order of columns in input_data matches X_train_scaled after preprocessing.
-# A more robust solution would involve storing feature names used during training.
-
-# It's important that input_data has the same column order as X_train when scaler was fitted.
-# If the scaler was fitted on X_train, and X_train has 15 columns as seen from the shapes, 
-# then input_data should also have 15 columns in the exact same order.
-
-# The current slider values are *unscaled*. We need to scale them for prediction.
-# To correctly scale individual inputs, you would usually create a dummy DataFrame 
-# with one row for the input and then apply the scaler.
-# Let's adjust the sliders to take raw input values, and then scale the single row.
-
-# Correcting the slider ranges to more realistic raw values based on the original dataset's describe() output.
-# You can find these ranges from df.describe() for the original (unscaled) features.
-# For example, if T ranged from -10 to 40, RH from 0 to 100, etc.
-
-# Re-defining input sliders to take *raw* values, not scaled values.
-# The values below are educated guesses based on typical ranges for these sensors/measurements.
-PT08S1_CO = st.slider('PT08.S1 (CO) Sensor Response (Raw)', 700.0, 2100.0, 1100.0) 
-C6H6_GT = st.slider('Benzene (C6H6(GT)) (microg/m^3)', 0.0, 60.0, 10.0)
-PT08S2_NMHC = st.slider('PT08.S2 (NMHC) Sensor Response (Raw)', 300.0, 2500.0, 900.0)
-NOx_GT = st.slider('NOx (NOx(GT)) (microg/m^3)', 0.0, 1500.0, 200.0)
-PT08S3_NOx = st.slider('PT08.S3 (NOx) Sensor Response (Raw)', 300.0, 2000.0, 900.0)
-NO2_GT = st.slider('NO2 (NO2(GT)) (microg/m^3)', 0.0, 500.0, 100.0)
-PT08S4_NO2 = st.slider('PT08.S4 (NO2) Sensor Response (Raw)', 200.0, 2500.0, 1500.0)
-PT08S5_O3 = st.slider('PT08.S5 (O3) Sensor Response (Raw)', 200.0, 2500.0, 1000.0)
-T = st.slider('Temperature (T) (°C)', -10.0, 40.0, 20.0)
-RH = st.slider('Relative Humidity (RH) (%)', 0.0, 100.0, 50.0)
-AH = st.slider('Absolute Humidity (AH)', 0.0, 3.0, 1.0)
-hour = st.slider('Hour of Day', 0, 23, 12)
-day_of_week = st.slider('Day of Week (0=Monday, 6=Sunday)', 0, 6, 2)
-day_of_year = st.slider('Day of Year', 1, 366, 182) # Max 366 for leap years
-month = st.slider('Month', 1, 12, 6)
-
-# Create a DataFrame from user inputs (raw values)
-input_data = pd.DataFrame([[PT08S1_CO, C6H6_GT, PT08S2_NMHC, NOx_GT, PT08S3_NOx,
-                            NO2_GT, PT08S4_NO2, PT08S5_O3, T, RH, AH,
-                            hour, day_of_week, day_of_year, month]],
-                            columns=['PT08.S1(CO)', 'C6H6(GT)', 'PT08.S2(NMHC)', 'NOx(GT)', 'PT08.S3(NOx)',
-                                     'NO2(GT)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH',
-                                     'hour', 'day_of_week', 'day_of_year', 'month'])
-
-# Scale the input data
-scaled_input_data = scaler.transform(input_data)
+st.subheader('Input Parameters Overview')
+st.write(input_df)
 
 # Make prediction
 if st.button('Predict CO Level'):
-    prediction_encoded = best_model.predict(scaled_input_data)
-    
-    # Map the encoded prediction back to original labels
-    # The label mapping was {'Low': 0, 'Moderate': 1, 'High': 2}
-    label_map_reverse = {0: 'Low', 1: 'Moderate', 2: 'High'}
-    predicted_label = label_map_reverse[prediction_encoded[0]]
-    
-    st.success(f'The predicted CO level is: **{predicted_label}**')
+    prediction_numeric = best_model.predict(scaled_input_df)
+    # Convert numeric prediction back to original labels
+    predicted_co_level = label_mapping_inv[prediction_numeric[0]]
 
-st.write("--- Developed by Tushar Gangera --- ")
+    st.subheader('Prediction Result')
+    st.success(f'The Predicted CO Level is: **{predicted_co_level}**')
+
+st.markdown("""
+---
+### How to Run This App:
+1.  Save the code above as `app.py`.
+2.  Open your terminal or command prompt.
+3.  Navigate to the directory where you saved `app.py`.
+4.  Run the command: `streamlit run app.py`
+""")
+
+
+# Write the content to app.py
+with open('app.py', 'w') as f:
+    f.write('''
+import streamlit as st
+import joblib
+import pandas as pd
+import numpy as np
+import os
+
+# Define the directory where models are saved
+models_dir = 'model'
+
+# Ensure the models directory exists (if running locally without prior execution)
+if not os.path.exists(models_dir):
+    st.error(f"Model directory '{models_dir}' not found. Please ensure models are saved in the correct location.")
+    st.stop()
+
+# Load the scaler and the best model
+try:
+    scaler = joblib.load(os.path.join(models_dir, 'scaler.pkl'))
+    best_model = joblib.load('best_model.pkl')
+    # The original labels were 'Low', 'Moderate', 'High' mapped to 0, 1, 2 respectively.
+    # Reconstruct the inverse label mapping directly.
+    label_mapping_inv = {0: 'Low', 1: 'Moderate', 2: 'High'}
+
+except FileNotFoundError as e:
+    st.error(f"Error loading model or scaler: {e}. Make sure 'scaler.pkl' and 'best_model.pkl' are in the root directory and 'y_test_encoded.pkl' in the 'model' directory.")
+    st.stop()
+
+# Define feature names (order matters for prediction)
+feature_names = [
+    'PT08.S1(CO)', 'C6H6(GT)', 'PT08.S2(NMHC)', 'NOx(GT)', 'PT08.S3(NOx)',
+    'NO2(GT)', 'PT08.S4(NO2)', 'PT08.S5(O3)', 'T', 'RH', 'AH',
+    'hour', 'day_of_week', 'day_of_year', 'month'
+]
+
+# Streamlit App Title
+st.title('Atmospheric CO Level Prediction')
+st.markdown('Predict the Carbon Monoxide (CO) level based on various atmospheric parameters.')
+
+# Input fields for features
+st.sidebar.header('Input Parameters')
+
+user_input = {}
+for feature in feature_names:
+    # Provide appropriate default values and ranges for input fields
+    # These are illustrative defaults; actual ranges might need to be derived from your dataset's min/max
+    if feature == 'hour':
+        user_input[feature] = st.sidebar.slider(f'Hour ({feature})', 0, 23, 12)
+    elif feature == 'day_of_week':
+        user_input[feature] = st.sidebar.slider(f'Day of Week ({feature}) (0=Mon, 6=Sun)', 0, 6, 2)
+    elif feature == 'month':
+        user_input[feature] = st.sidebar.slider(f'Month ({feature})', 1, 12, 6)
+    elif feature == 'day_of_year':
+        user_input[feature] = st.sidebar.slider(f'Day of Year ({feature})', 1, 366, 180)
+    elif feature == 'T':
+        user_input[feature] = st.sidebar.number_input(f'Temperature (°C) ({feature})', value=15.0, min_value=-50.0, max_value=50.0)
+    elif feature == 'RH':
+        user_input[feature] = st.sidebar.number_input(f'Relative Humidity (%) ({feature})', value=50.0, min_value=0.0, max_value=100.0)
+    elif feature == 'AH':
+        user_input[feature] = st.sidebar.number_input(f'Absolute Humidity ({feature})', value=1.0, min_value=0.0, max_value=10.0)
+    elif feature == 'C6H6(GT)':
+         user_input[feature] = st.sidebar.number_input(f'Benzene Concentration (microg/m^3) ({feature})', value=8.0, min_value=0.0, max_value=100.0)
+    else:
+        # Generic number input for other sensor readings and concentrations
+        user_input[feature] = st.sidebar.number_input(f'{feature}', value=1000.0, min_value=0.0, max_value=3000.0)
+
+# Convert user input to DataFrame
+input_df = pd.DataFrame([user_input])
+
+# Scale the input features
+scaled_input = scaler.transform(input_df)
+scaled_input_df = pd.DataFrame(scaled_input, columns=feature_names)
+
+st.subheader('Input Parameters Overview')
+st.write(input_df)
+
+# Make prediction
+if st.button('Predict CO Level'):
+    prediction_numeric = best_model.predict(scaled_input_df)
+    # Convert numeric prediction back to original labels
+    predicted_co_level = label_mapping_inv[prediction_numeric[0]]
+
+    st.subheader('Prediction Result')
+    st.success(f'The Predicted CO Level is: **{predicted_co_level}**')
+''')
+print("Streamlit app.py created successfully!")
