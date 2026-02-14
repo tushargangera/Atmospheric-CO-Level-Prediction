@@ -114,6 +114,8 @@ A Streamlit web application (`app.py`) was created to provide an interactive int
     ```
     (You might be prompted to enter a 'Tunnel Password' for `localtunnel`.)
 
+Streamlit App Like: https://atmospheric-co-level-prediction.streamlit.app/
+
 ## 8. Environment Setup
 
 To replicate this project, it is recommended to set up a virtual environment and install the required packages. The `requirements.txt` file lists all the necessary Python libraries and their versions.
