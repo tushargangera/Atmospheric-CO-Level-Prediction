@@ -1,21 +1,10 @@
-# Atmospheric CO Level Prediction Project
+# Atmospheric CO Level Prediction using Machine Learning
 
-## Table of Contents
-1.  [Project Overview](#project-overview)
-2.  [Dataset Description](#dataset-description)
-3.  [Data Preprocessing and Feature Engineering](#data-preprocessing-and-feature-engineering)
-4.  [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
-5.  [Model Training and Evaluation](#model-training-and-evaluation)
-6.  [Model Comparison](#model-comparison)
-7.  [Deployment (Streamlit App)](#deployment-streamlit-app)
+## a. Problem Statement
+This project aims to develop and evaluate several machine learning classification models to predict the Carbon Monoxide (CO) level in the atmosphere. The CO level is categorized into 'low', 'medium', and 'high' based on quantiles of the CO(GT) concentration from the Air Quality dataset. The ultimate goal is to build an interactive Streamlit web application to demonstrate these models and their performance.
 
-## 1. Project Overview
-
-This project aimed to develop and evaluate several machine learning classification models to predict the Carbon Monoxide (CO) level in the atmosphere. The CO level was categorized into 'low', 'medium', and 'high' based on quantiles of the CO(GT) concentration from the Air Quality dataset. The ultimate goal was to build an interactive Streamlit web application to demonstrate these models and their performance, allowing users to input atmospheric parameters and get real-time CO level predictions.
-
-## 2. Dataset Description
-
-The dataset used was the "Air Quality (UCI)" dataset, sourced from the UCI Machine Learning Repository. It contains measurements of various air pollutants and meteorological parameters recorded hourly from March 2004 to February 2005 in an Italian city. Key features included:
+## b. Dataset Description
+The dataset used is the "Air Quality (UCI)" dataset, sourced from the UCI Machine Learning Repository. It contains measurements of various air pollutants and meteorological parameters recorded hourly from March 2004 to February 2005 in an Italian city. Key features include:
 
 *   `CO(GT)`: True hourly averaged CO concentration (mg/m^3)
 *   `PT08.S1(CO)`: Tin oxide sensor response (CO)
@@ -30,90 +19,38 @@ The dataset used was the "Air Quality (UCI)" dataset, sourced from the UCI Machi
 *   `RH`: Relative Humidity (%)
 *   `AH`: Absolute Humidity (AH)
 
-The target variable, `CO_Level`, is a categorical variable derived from `CO(GT)` and classified into 'low', 'medium', and 'high' based on quantiles.
+The target variable, `CO_Level`, is a categorical variable derived from `CO(GT)` and classified into 'low', 'moderate', and 'high' based on quantiles.
 
-## 3. Data Preprocessing and Feature Engineering
+## c. Models Used
+Six machine learning classification models were implemented and evaluated on scaled data to predict atmospheric CO levels. The models are Logistic Regression, Decision Tree, K-Nearest Neighbor (KNN), Naive Bayes (GaussianNB), Random Forest, and XGBoost.
 
-The `AirQualityUCI.csv` dataset underwent extensive cleaning and preprocessing:
+### Comparison Table
+| ML Model Name       | Accuracy | AUC Score | Precision | Recall | F1 Score | MCC Score |
+|:--------------------|:---------|:----------|:----------|:-------|:---------|:----------|
+| Logistic Regression | 0.8697   | 0.9572    | 0.8703    | 0.8697 | 0.8699   | 0.7986    |
+| Decision Tree       | 0.8593   | 0.8916    | 0.8594    | 0.8593 | 0.8593   | 0.7831    |
+| K-Nearest Neighbor  | 0.8730   | 0.9649    | 0.8753    | 0.8730 | 0.8737   | 0.8048    |
+| Naive Bayes         | 0.8410   | 0.9388    | 0.8436    | 0.8410 | 0.8419   | 0.7552    |
+| Random Forest       | 0.8984   | 0.9797    | 0.8999    | 0.8984 | 0.8988   | 0.8437    |
+| XGBoost             | 0.9068   | 0.9831    | 0.9076    | 0.9068 | 0.9071   | 0.8565    |
 
-*   **Missing Values**: The placeholder value '-200' was replaced with `np.nan`.
-*   **Column Dropping**: Irrelevant columns such as `Unnamed: 15`, `Unnamed: 16`, and `NMHC(GT)` (due to high missingness) were dropped.
-*   **Data Type Conversion**: Object columns with comma decimal separators (e.g., `CO(GT)`, `C6H6(GT)`) were converted to numeric (float).
-*   **Temporal Feature Creation**: 'Date' and 'Time' columns were combined to create a `DateTime` object, from which `hour`, `day_of_week`, `day_of_year`, and `month` were extracted.
-*   **Imputation**: Remaining missing values were filled using forward fill (`ffill()`) followed by backfill (`bfill()`).
-*   **Target Variable**: `CO(GT)` was categorized into 'Low', 'Moderate', and 'High' based on quantiles, creating the `air_quality_category` as the target variable.
-*   **Data Split and Scaling**: The dataset was split into training (80%) and testing (20%) sets with stratification. Features were then scaled using `StandardScaler` to prepare them for model training.
+### Observations on Model Performance
+| ML Model Name       | Observation about Model Performance                                                                                                                                                                                                                              |
+|:--------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Logistic Regression | Showed competitive performance with strong predictive capabilities across all metrics, benefiting significantly from feature scaling. Achieved a high AUC score, indicating good class separability.                                                       |
+| Decision Tree       | Exhibited the lowest performance among the ensemble models. While interpretable, it might be prone to overfitting or less capable of capturing complex relationships compared to more sophisticated models.                                             |
+| K-Nearest Neighbor  | Performed well, particularly after feature scaling. Its effectiveness underscores the importance of proper data normalization for distance-based algorithms. Achieved high AUC, precision, and recall.                                                    |
+| Naive Bayes         | Provided a decent baseline performance. Its assumption of feature independence might not always hold true for atmospheric data, potentially limiting its overall accuracy compared to more complex models.                                                 |
+| Random Forest       | Demonstrated strong performance, closely trailing XGBoost. Its ensemble nature effectively reduces overfitting and handles non-linear relationships well, making it a robust choice for this dataset.                                                         |
+| XGBoost             | Achieved the highest overall performance across all evaluation metrics. Its boosting approach, which sequentially builds trees to correct errors of previous trees, proved highly effective in capturing the underlying patterns in the air quality data. |
 
-## 4. Exploratory Data Analysis (EDA)
+## Step 6: Deploy on Streamlit Community Cloud
+To deploy this application on Streamlit Community Cloud, follow these steps:
 
-EDA was performed to understand the distribution, relationships, and patterns within the data. This included:
-
-*   **Descriptive Statistics**: Generated for `X_train_scaled` to understand central tendency, dispersion, and shape.
-*   **Histograms**: Visualized the distribution of each scaled feature.
-*   **Box Plots**: Showcased the spread and potential outliers for each scaled feature.
-*   **Correlation Matrix**: A heatmap was generated to visualize linear relationships between features, identifying highly correlated pairs.
-*   **Feature vs. Target Analysis**: Box plots were used to visualize how the distribution of each scaled feature varied across the 'Low', 'Moderate', and 'High' air quality categories.
-
-## 5. Model Training and Evaluation
-
-Six different machine learning classification models were implemented and evaluated on the preprocessed and scaled data:
-
-*   **Logistic Regression**
-*   **Decision Tree Classifier**
-*   **K-Nearest Neighbor (KNN) Classifier**
-*   **Naive Bayes (GaussianNB) Classifier**
-*   **Random Forest Classifier**
-*   **XGBoost Classifier**
-
-Each model was trained on `X_train_scaled` and `y_train`, and evaluated on `X_test_scaled` and `y_test` using metrics such as Accuracy, Precision, Recall, F1 Score, ROC AUC Score, and Matthews Correlation Coefficient (MCC).
-
-## 6. Model Comparison
-
-After training, all models were compared based on their performance metrics:
-
-| Model               | Accuracy   | Precision   | Recall   | F1 Score   | ROC AUC Score   | MCC Score   |
-|:--------------------|:-----------|:------------|:---------|:-----------|:----------------|:------------|
-| Logistic Regression | 0.869707   | 0.87031     | 0.869707 | 0.869947   | 0.957197        | 0.798613    |
-| Decision Tree       | 0.859283   | 0.859405    | 0.859283 | 0.859281   | 0.891596        | 0.78306     |
-| K-Nearest Neighbor  | 0.872964   | 0.875308    | 0.872964 | 0.873656   | 0.964922        | 0.804761    |
-| Naive Bayes         | 0.841042   | 0.843611    | 0.841042 | 0.841902   | 0.938832        | 0.755219    |
-| Random Forest       | 0.898371   | 0.899933    | 0.898371 | 0.898835   | 0.979700        | 0.84375     |
-| XGBoost             | 0.912052   | 0.912813    | 0.912052 | 0.912285   | 0.984400        | 0.864600    |
-
-**Key Findings:**
-
-*   **XGBoost Classifier** emerged as the **best-performing model**, achieving the highest scores across most metrics, notably an Accuracy of 0.9121 and an ROC AUC Score of 0.9844.
-*   **Random Forest Classifier** was a close second, demonstrating strong predictive capabilities.
-*   **Decision Tree Classifier** generally showed the lowest performance among the ensemble and advanced models.
-
-## 7. Deployment (Streamlit App)
-
-A Streamlit web application (`app.py`) was created to provide an interactive interface for users to predict CO levels. This app:
-
-*   Loads the `best_model.pkl` (XGBoost) and `scaler.pkl` artifacts.
-*   Allows users to input various atmospheric parameters via sliders.
-*   Scales the user input using the loaded `StandardScaler`.
-*   Makes a prediction using the best model.
-*   Displays the predicted CO level as 'Low', 'Moderate', or 'High'.
-
-
-## How to Run Locally
-
-1.  **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-2.  **Run Streamlit App:**
-    ```bash
-    streamlit run app.py
-    ```
-
-## How to Deploy on Streamlit Cloud
-
-1.  Push this repository to GitHub.
-2.  Log in to [Streamlit Community Cloud](https://streamlit.io/cloud).
-3.  Click "New app" and select this repository.
-4.  Set the **Main file path** to `app.py`.
-5.  Click **Deploy**.
-
-Streamlit App Link: https://atmospheric-co-level-prediction.streamlit.app/
+1.  Go to https://streamlit.io/cloud
+2.  Sign in using your GitHub account.
+3.  Click “New App”.
+4.  Select your repository containing the `app.py` file, `requirements.txt`, and the `model/` directory with all saved artifacts.
+5.  Choose the branch (usually `main` or `master`).
+6.  Select `app.py` as the main file path.
+7.  Click Deploy.
