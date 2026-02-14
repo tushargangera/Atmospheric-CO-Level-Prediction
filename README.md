@@ -8,7 +8,6 @@
 5.  [Model Training and Evaluation](#model-training-and-evaluation)
 6.  [Model Comparison](#model-comparison)
 7.  [Deployment (Streamlit App)](#deployment-streamlit-app)
-8.  [Environment Setup](#environment-setup)
 
 ## 1. Project Overview
 
