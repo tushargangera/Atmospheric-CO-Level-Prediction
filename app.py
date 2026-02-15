@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
 import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -13,6 +12,14 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import seaborn as sns
 import json
+# --- Conditional installation of joblib ---
+try:
+    import joblib
+except ImportError:
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "joblib"])
+    import joblib
 
 # Page configuration
 st.set_page_config(
