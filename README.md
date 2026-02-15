@@ -1,9 +1,11 @@
 # Atmospheric CO Level Prediction using Machine Learning
 
-## a. Problem Statement
+## 1. Problem Statement
 This project aims to develop and evaluate several machine learning classification models to predict the Carbon Monoxide (CO) level in the atmosphere. The CO level is categorized into 'low', 'medium', and 'high' based on quantiles of the CO(GT) concentration from the Air Quality dataset. The ultimate goal is to build an interactive Streamlit web application to demonstrate these models and their performance.
 
-## b. Dataset Description
+---
+
+## 2. Dataset Description
 The dataset used is the "Air Quality (UCI)" dataset, sourced from the [Air Quality](https://archive.ics.uci.edu/dataset/360/air+quality). It contains measurements of various air pollutants and meteorological parameters recorded hourly from March 2004 to February 2005 in an Italian city. Key features include:
 
 *   `CO(GT)`: True hourly averaged CO concentration (mg/m^3)
@@ -21,10 +23,32 @@ The dataset used is the "Air Quality (UCI)" dataset, sourced from the [Air Quali
 
 The target variable, `CO_Level`, is a categorical variable derived from `CO(GT)` and classified into 'low', 'moderate', and 'high' based on quantiles.
 
-## c. Models Used
-Six machine learning classification models were implemented and evaluated on scaled data to predict atmospheric CO levels. The models are Logistic Regression, Decision Tree, K-Nearest Neighbor (KNN), Naive Bayes (GaussianNB), Random Forest, and XGBoost.
+---
 
-### Comparison Table
+## 3. Machine Learning Models Used
+The following classification models were implemented and evaluated on the same dataset:
+
+1. Logistic Regression
+2. Decision Tree Classifier
+3. K-Nearest Neighbors (KNN)
+4. Naive Bayes Classifier
+5. Random Forest Classifier (Ensemble Model)
+6. XGBoost Classifier (Ensemble Model)
+
+---
+
+## 4. Model Evaluation Metrics
+Each model was evaluated using the following metrics:
+
+- Accuracy
+- AUC Score
+- Precision
+- Recall
+- F1 Score
+- Matthews Correlation Coefficient (MCC)
+
+### Model Comparison Table
+
 | ML Model Name       | Accuracy | AUC Score | Precision | Recall | F1 Score | MCC Score |
 |:--------------------|:---------|:----------|:----------|:-------|:---------|:----------|
 | Logistic Regression | 0.8697   | 0.9572    | 0.8703    | 0.8697 | 0.8699   | 0.7986    |
@@ -34,7 +58,11 @@ Six machine learning classification models were implemented and evaluated on sca
 | Random Forest       | 0.8984   | 0.9797    | 0.8999    | 0.8984 | 0.8988   | 0.8437    |
 | XGBoost             | 0.9068   | 0.9831    | 0.9076    | 0.9068 | 0.9071   | 0.8565    |
 
-### Observations on Model Performance
+*(Values filled after model evaluation)*
+
+---
+
+## 5. Observations
 | ML Model Name       | Observation about Model Performance                                                                                                                                                                                                                              |
 |:--------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Logistic Regression | Showed competitive performance with strong predictive capabilities across all metrics, benefiting significantly from feature scaling. Achieved a high AUC score, indicating good class separability.                                                       |
@@ -44,13 +72,31 @@ Six machine learning classification models were implemented and evaluated on sca
 | Random Forest       | Demonstrated strong performance, closely trailing XGBoost. Its ensemble nature effectively reduces overfitting and handles non-linear relationships well, making it a robust choice for this dataset.                                                         |
 | XGBoost             | Achieved the highest overall performance across all evaluation metrics. Its boosting approach, which sequentially builds trees to correct errors of previous trees, proved highly effective in capturing the underlying patterns in the air quality data. |
 
-## Step 6: Deploy on Streamlit Community Cloud
-To deploy this application on Streamlit Community Cloud, follow these steps:
+---
 
-1.  Go to https://streamlit.io/cloud
-2.  Sign in using your GitHub account.
-3.  Click “New App”.
-4.  Select your repository containing the `app.py` file, `requirements.txt`, and the `model/` directory with all saved artifacts.
-5.  Choose the branch (usually `main` or `master`).
-6.  Select `app.py` as the main file path.
-7.  Click Deploy.
+## 6. Streamlit Web Application
+An interactive **Streamlit web application** was developed to demonstrate the machine learning models.
+
+### Features:
+- Upload test dataset (CSV format)
+- Select machine learning model
+- Display evaluation metrics
+- Show confusion matrix / classification report
+
+---
+
+## 7. Deployment
+The application is deployed using **Streamlit Community Cloud**.
+
+- **GitHub Repository:** *https://github.com/tushargangera/Atmospheric-CO-Level-Prediction*
+- **Live Streamlit App:** *https://atmospheric-co-level-prediction.streamlit.app/*
+
+---
+
+## 8. Tools & Technologies
+- Python
+- Pandas, NumPy
+- Scikit-learn
+- XGBoost
+- Streamlit
+- Matplotlib / Seaborn
