@@ -259,7 +259,7 @@ elif page == "🔮 Predict CO Level":
             pt08_s2_nmhc = st.number_input('PT08.S2(NMHC) (Titania sensor)', min_value=0.0, value=900.0, format="%.2f")
             nox_gt = st.number_input('NOx(GT) (NOx concentration)', min_value=0.0, value=150.0, format="%.2f")
             pt08_s3_nox = st.number_input('PT08.S3(NOx) (Tungsten oxide sensor NOx)', min_value=0.0, value=1000.0, format="%.2f")
-        
+
         with col2:
             no2_gt = st.number_input('NO2(GT) (NO2 concentration)', min_value=0.0, value=100.0, format="%.2f")
             pt08_s4_no2 = st.number_input('PT08.S4(NO2) (Tungsten oxide sensor NO2)', min_value=0.0, value=1500.0, format="%.2f")
@@ -282,7 +282,7 @@ elif page == "🔮 Predict CO Level":
                                         no2_gt, pt08_s4_no2, pt08_s5_o3, temp, rh, ah,
                                         hour, day_of_week, day_of_year, month]],
                                       columns=feature_names)
-            
+
             # Scale the input data
             input_data_scaled = scaler.transform(input_data)
 
@@ -290,12 +290,19 @@ elif page == "🔮 Predict CO Level":
             # For now, let's use XGBoost as it was the best performer
             if 'XGBoost' in models:
                 model_to_use = models['XGBoost']
-                prediction_encoded = model_to_use.predict(input_data_scaled)[0]
+                prediction_raw = model_to_use.predict(input_data_scaled)
+
+                # Robustly extract the scalar prediction
+                if isinstance(prediction_raw, np.ndarray):
+                    prediction_encoded = prediction_raw.item() # Extracts scalar from 0-d or 1-d array
+                else:
+                    prediction_encoded = int(prediction_raw) # Assume it's already a scalar integer
+
                 prediction_proba = model_to_use.predict_proba(input_data_scaled)[0]
-                
+
                 predicted_category = label_mapping_reverse.get(prediction_encoded, 'Unknown')
                 confidence = np.max(prediction_proba)
-                
+
                 st.subheader("Prediction Result")
                 st.success(f"The predicted Atmospheric CO Level is: **{predicted_category}**")
                 st.info(f"Confidence: **{confidence:.2f}**")
@@ -453,7 +460,7 @@ elif page == "📈 Dataset Info":
     st.dataframe(metrics_info, width='stretch', hide_index=True)
 
 # Footer
-st.markdown("---")
+st.markdown("___")
 st.markdown(
     "<div style='text-align: center; color: #666;'>ML Assignment 2 - Atmospheric CO Level Prediction</div>",
     unsafe_allow_html=True
